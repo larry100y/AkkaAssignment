@@ -6,63 +6,71 @@ import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
-import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-import static com.m800.assignment.actor.FileScanner.FINISHED;
-
 public class FileParser extends AbstractActor{
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().getSystem(), this);
-    private final ActorRef aggregator;
 
-    public FileParser(ActorRef aggregator) {
-        this.aggregator = aggregator;
+    private final ActorRef manager;
+    private final String filePath;
+
+    public FileParser(String filePath, ActorRef manager) {
+        this.filePath = filePath;
+        this.manager = manager;
     }
 
-    public static Props props(ActorRef aggregator){
-        return Props.create(FileParser.class, () -> new FileParser(aggregator));
+    public static Props props(String filePath, ActorRef manager){
+        return Props.create(FileParser.class, filePath, manager);
     }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(ParseFile.class, p -> {
-                    aggregator.tell(new StartOfFile(p.file.toString()), getSelf());
-
-                    // for line in lines
-                    try(Stream<String> stream = Files.lines(Paths.get(p.file.toString()))){
-                        stream.forEach(l -> {
-                            aggregator.tell(new Line(l), getSelf());
-                        });
-                    }
-
-                    // EOF
-                    aggregator.tell(EOF, getSelf());
-
-                    getSender().tell(FINISHED, getSelf());
-                })
+                .match(ParseFile.class, this::onParseFile)
                 .build();
     }
 
+    private void onParseFile(ParseFile msg){
+        ActorRef aggregator = getContext().actorOf(Aggregator.props(filePath, manager), "aggregator");
+        aggregator.tell(new StartOfFile(), getSelf());
+
+        try(Stream<String> stream = Files.lines(Paths.get(filePath))){
+            stream.forEach(l -> {
+                aggregator.tell(new Line(l), getSelf());
+            });
+        } catch (IOException e) {
+            logger.info("An error occurs while parsing " + "' " + filePath + "'");
+        }
+
+        aggregator.tell(new EndOfFile(), getSelf());
+
+    }
+
+    /**
+     *
+     */
     public static final class ParseFile {
-        final File file;
+        final String filePath;
 
-        public ParseFile(File file) {
-            this.file = file;
+        public ParseFile(String filePath) {
+            this.filePath = filePath;
         }
     }
 
+    /**
+     *
+     */
     public static final class StartOfFile {
-        final String filename;
 
-        public StartOfFile(String filename) {
-            this.filename = filename;
-        }
     }
 
+    /**
+     *
+     */
     public static final class Line {
         final String text;
 
@@ -71,8 +79,18 @@ public class FileParser extends AbstractActor{
         }
     }
 
-    public static final String EOF = "EOF";
+    /**
+     *
+     */
+    public static final class EndOfFile {
 
+    }
 
+    /**
+     *
+     */
+    public static final class Error{
+
+    }
 
 }

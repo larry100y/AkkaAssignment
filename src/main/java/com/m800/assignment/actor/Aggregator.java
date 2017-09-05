@@ -1,6 +1,7 @@
 package com.m800.assignment.actor;
 
 import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -11,28 +12,35 @@ public class Aggregator extends AbstractActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().getSystem(), this);
 
+    private final ActorRef manager;
     private int count = 0;
+    private final String filePath;
 
-    public static Props props(){
-        return Props.create(Aggregator.class);
+    public Aggregator(String filePath, ActorRef manager) {
+        this.manager = manager;
+        this.filePath = filePath;
+    }
+
+    public static Props props(String filePath, ActorRef manager){
+        return Props.create(Aggregator.class, filePath, manager);
     }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder()
                 .match(FileParser.StartOfFile.class, s -> {
-                    System.out.println("********************");
-                    System.out.println("File Name: " + s.filename);
+
                 })
                 .match(FileParser.Line.class, l -> {
                     countWord(l.text);
                 })
-                .matchEquals(FileParser.EOF, e -> {
-                    System.out.println("Word Count: " + count);
-                    System.out.println("********************");
-                    this.count = 0;
-                })
+                .match(FileParser.EndOfFile.class, this::onEndOfFile)
                 .build();
+    }
+
+    private void onEndOfFile(FileParser.EndOfFile msg){
+        logger.info("File Name: {}, Word Count: {}", filePath, count);
+        manager.tell(new Manager.ReportResult(filePath, count), getSelf());
     }
 
     private void countWord(String text){

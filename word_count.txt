@@ -1,0 +1,4 @@
+Welcome to the fastest Word Count Tool on the net. 
+Just paste in your article into the text area above, and your word count will be calculated automatically.
+
+If you are looking to check your word count in Word instead then read my post about it.
