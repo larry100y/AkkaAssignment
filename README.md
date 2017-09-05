@@ -1,6 +1,15 @@
 Akka Assignment
 ==============
 
+Update
+-----------
+- Replaced most of the system.out by Akka built-in logger.
+- Allow FileScanner to create multiple FileParser actors.
+- Added a Manager actor to manage lifecycle and log result to file.
+- Finished the test case. But the actors lack acknowledgement message, and 
+are not loose coupled enough (they have the object reference of the manager actor).
+So the test case does not cover many situations yet.  
+
 Installation
 ------------
 Use '$gradle build' to build an executable jar in path-to-project/build/libs
