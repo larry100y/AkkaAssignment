@@ -40,7 +40,7 @@ public class Test {
         "Sometimes the IDE will not copy the 'test/resources' folder to output dir," +
         " so it cannot find the test file and test will fails."
          */
-        
+
         String dirPath = testFile.getParent();
         System.out.println("Resource Directory: " + dirPath);
 

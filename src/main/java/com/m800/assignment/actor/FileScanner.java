@@ -2,16 +2,12 @@ package com.m800.assignment.actor;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
-import akka.actor.PoisonPill;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import org.apache.commons.io.filefilter.SuffixFileFilter;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -44,41 +40,12 @@ public class FileScanner extends AbstractActor {
                 .build();
     }
 
-    /*
-    private void checkDir(Scan c){
-        //check dir path, list existing text file
-        File file = new File(c.dir);
-        if(!file.isDirectory()){
-            System.out.println(">>> there is no such directory");
-            return;
-        }
-        File[] list = file.listFiles();
-        if(list.length < 1){
-            System.out.println(">>> there is no file in directory");
-            return;
-        }
-
-        for(File f : list){
-            if(isTextFile(f)){
-                // push into queue
-                queue.add(f);
-            }
-        }
-
-        if(!queue.isEmpty()){
-            parser.tell(new FileParser.ParseFile(queue.poll()), getSelf());
-        }else{
-            System.out.println(">>> there is no text file in directory");
-            getSelf().tell(FINISHED, getSelf());
-        }
-    }
-    */
-
     private void onScan(Scan msg){
         File file = new File(this.dir);
         if(!file.isDirectory()){
-            logger.info("there is no such directory");
-            return; //TODO
+            logger.info("There is no such directory: {}", dir);
+            manager.tell(new Manager.NoDirectory(), getSelf());
+            return;
         }
         //String[] filePaths = file.list(new SuffixFileFilter(".txt"));
         File[] files = file.listFiles();

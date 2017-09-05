@@ -90,6 +90,13 @@ public class Manager extends AbstractActor{
         }
     }
 
+    /**
+     * Message: The given path is not a directory.
+     */
+    public static final class NoDirectory{
+
+    }
+
     @Override
     public Receive createReceive() {
         return receiveBuilder()
@@ -97,6 +104,7 @@ public class Manager extends AbstractActor{
                 .match(ReportParserList.class, this::onReportParserList)
                 .match(ReportResult.class, this::onReportResult)
                 .match(Timeout.class, this::onTimeout)
+                .match(NoDirectory.class, this::onNoDirectory)
                 .build();
     }
 
@@ -163,6 +171,10 @@ public class Manager extends AbstractActor{
     }
 
     private void onTimeout(Timeout msg){
+        getSelf().tell(PoisonPill.getInstance(), ActorRef.noSender());
+    }
+
+    private void onNoDirectory(NoDirectory msg){
         getSelf().tell(PoisonPill.getInstance(), ActorRef.noSender());
     }
 
