@@ -5,7 +5,7 @@ Update
 -----------
 - Replaced most of the system.out by Akka built-in logger.
 - Allow FileScanner to create multiple FileParser actors.
-- Added a Manager actor to manage lifecycle and log result to file.
+- Added a Manager actor to manage lifecycle and log result to file (it has a predefined name 'parse-result').
 - Finished the test case. But the actors lack acknowledgement message, and 
 are not loose coupled enough (they have the object reference of the manager actor).
 So the test case does not cover many situations yet.  
